@@ -26,6 +26,7 @@ describe(`Logger`, () => {
         logLevel: "INFO",
         mainFields: [],
         silent: false,
+        references: undefined,
       },
       new chalk.Instance()
     );
@@ -52,6 +53,7 @@ describe(`Logger`, () => {
         logLevel: "INFO",
         mainFields: [],
         silent: false,
+        references: undefined,
       },
       new chalk.Instance()
     );

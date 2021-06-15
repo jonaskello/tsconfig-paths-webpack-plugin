@@ -128,12 +128,14 @@ export class TsconfigPathsPlugin implements ResolvePluginInstance {
   absoluteBaseUrl: string;
   extensions: ReadonlyArray<string>;
 
+  referenceMatchMap: Record<string, TsconfigPaths.MatchPathAsync>;
   matchPath: TsconfigPaths.MatchPathAsync;
 
   constructor(rawOptions: Partial<Options.Options> = {}) {
     const options = Options.getOptions(rawOptions);
 
     this.extensions = options.extensions;
+    this.referenceMatchMap = {};
 
     // const colors = new chalk.constructor({ enabled: options.colors });
 
@@ -145,13 +147,8 @@ export class TsconfigPathsPlugin implements ResolvePluginInstance {
     const context = options.context || process.cwd();
     const loadFrom = options.configFile || context;
 
-    const loadResult = TsconfigPaths.loadConfig(loadFrom);
-    if (loadResult.resultType === "failed") {
-      this.log.logError(`Failed to load ${loadFrom}: ${loadResult.message}`);
-    } else {
-      this.log.logInfo(
-        `tsconfig-paths-webpack-plugin: Using config file at ${loadResult.configFileAbsolutePath}`
-      );
+    const loadResult = loadConfig(loadFrom, this.log);
+    if (loadResult.resultType === "success") {
       this.baseUrl = options.baseUrl || loadResult.baseUrl;
       this.absoluteBaseUrl = options.baseUrl
         ? path.resolve(options.baseUrl)
@@ -161,6 +158,23 @@ export class TsconfigPathsPlugin implements ResolvePluginInstance {
         loadResult.paths,
         options.mainFields
       );
+
+      if (options.references) {
+        options.references.reduce((pathMap, reference) => {
+          if (reference) {
+            const referenceResult = loadConfig(reference, this.log);
+            if (referenceResult.resultType === "success") {
+              const { paths, absoluteBaseUrl } = referenceResult;
+              pathMap[absoluteBaseUrl] = TsconfigPaths.createMatchPathAsync(
+                absoluteBaseUrl,
+                paths,
+                options.mainFields
+              );
+            }
+          }
+          return pathMap;
+        }, this.referenceMatchMap);
+      }
     }
   }
 
@@ -201,6 +215,7 @@ export class TsconfigPathsPlugin implements ResolvePluginInstance {
         .tapAsync(
           { name: "TsconfigPathsPlugin" },
           createPluginCallback(
+            this.referenceMatchMap,
             this.matchPath,
             resolver,
             this.absoluteBaseUrl,
@@ -227,10 +242,26 @@ export class TsconfigPathsPlugin implements ResolvePluginInstance {
   }
 }
 
+function loadConfig(
+  configPath: string,
+  logger: Logger.Logger
+): TsconfigPaths.ConfigLoaderResult {
+  const loadResult = TsconfigPaths.loadConfig(configPath);
+  if (loadResult.resultType === "failed") {
+    logger.logError(`Failed to load ${configPath}: ${loadResult.message}`);
+  } else {
+    logger.logInfo(
+      `tsconfig-paths-webpack-plugin: Using config file at ${loadResult.configFileAbsolutePath}`
+    );
+  }
+  return loadResult;
+}
+
 function createPluginCallback(
-  matchPath: TsconfigPaths.MatchPathAsync,
+  referenceMatchMap: Record<string, TsconfigPaths.MatchPathAsync>,
+  baseMatchPath: TsconfigPaths.MatchPathAsync,
   resolver: Resolver,
-  absoluteBaseUrl: string,
+  baseAbsoluteBaseUrl: string,
   hook: Tapable,
   extensions: ReadonlyArray<string>
 ): TapAsyncCallback {
@@ -250,6 +281,35 @@ function createPluginCallback(
     ) {
       return callback();
     }
+
+    // Find the base URL and matchPath instance
+    // Quickly check if the request path is a known baseUrl
+    // Then check if the path is a child of a reference baseUrl
+    let absoluteBaseUrl = baseAbsoluteBaseUrl;
+    if (
+      typeof request.path === "string" &&
+      request.path !== baseAbsoluteBaseUrl
+    ) {
+      if (referenceMatchMap[request.path]) {
+        absoluteBaseUrl = request.path;
+      } else {
+        const referenceUrl = Object.keys(referenceMatchMap).find(
+          (refBaseUrl) => {
+            const relative = path.relative(refBaseUrl, request.path || "");
+            return (
+              relative &&
+              !relative.startsWith("..") &&
+              !path.isAbsolute(relative)
+            );
+          }
+        );
+        if (referenceUrl) {
+          absoluteBaseUrl = referenceUrl;
+        }
+      }
+    }
+
+    const matchPath = referenceMatchMap[absoluteBaseUrl] || baseMatchPath;
 
     matchPath(
       innerRequest,

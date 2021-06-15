@@ -10,6 +10,7 @@ export interface Options {
   readonly context: string | undefined;
   readonly colors: boolean;
   readonly mainFields: string[];
+  readonly references: string[] | undefined;
 }
 
 type ValidOptions = keyof Options;
@@ -22,6 +23,7 @@ const validOptions: ReadonlyArray<ValidOptions> = [
   "logInfoToStdOut",
   "context",
   "mainFields",
+  "references",
 ];
 
 /**
@@ -68,6 +70,7 @@ function makeOptions(rawOptions: Partial<Options>): Options {
       context: undefined,
       colors: true,
       mainFields: ["main"],
+      references: undefined,
     } as Options),
     ...rawOptions,
   };

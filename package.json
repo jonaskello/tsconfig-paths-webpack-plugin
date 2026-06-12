@@ -7,6 +7,10 @@
   "author": "Jonas Kello",
   "license": "MIT",
   "repository": "https://github.com/dividab/tsconfig-paths-webpack-plugin",
+  "homepage": "https://github.com/dividab/tsconfig-paths-webpack-plugin#readme",
+  "bugs": {
+    "url": "https://github.com/dividab/tsconfig-paths-webpack-plugin/issues"
+  },
   "dependencies": {
     "chalk": "^4.1.0",
     "enhanced-resolve": "^5.7.0",

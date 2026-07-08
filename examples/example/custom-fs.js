@@ -1,4 +1,4 @@
-const fs = require("fs");
+const fs = require("node:fs");
 const webpack = require("webpack");
 
 const config = require("./webpack.config");

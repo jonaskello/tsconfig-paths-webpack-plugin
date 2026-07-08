@@ -16,15 +16,10 @@ your `webpack.config.js` which correspond to the `paths` entries in your
 `tsconfig.json`. This plugin creates those `alias` entries for you, so you don't
 have to!
 
+> Note this plugin only work with webpack 5. If you are using webpack 4, please use version `^4`
+
+
 ## How to install
-
-> NOTE: If you are using webpack 4 you need to use version >= 3.0.0 (which is aso backwards compatible with webpack 3).
-
-```
-yarn add --dev tsconfig-paths-webpack-plugin
-```
-
-or
 
 ```
 npm install --save-dev tsconfig-paths-webpack-plugin

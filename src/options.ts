@@ -22,6 +22,7 @@ const validOptions: ReadonlyArray<ValidOptions> = [
   "logLevel",
   "logInfoToStdOut",
   "context",
+  "colors",
   "mainFields",
   "references",
 ];

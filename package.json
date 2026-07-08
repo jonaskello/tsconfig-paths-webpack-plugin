@@ -33,6 +33,7 @@
     "example": "yarn build && cd examples/example && webpack && node custom-fs.js",
     "build": "tsc -p tsconfig.json",
     "lint": "eslint \"./{src,tests}/**/*.ts{,x}\" --ext .js,.ts,.tsx -f visualstudio",
+    "lint-staged": "lint-staged",
     "test": "node --test",
     "test-coverage": "node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=./coverage.lcov --test-reporter=spec --test-reporter-destination=stdout src/tests/*.test.tsx src/tests/*.test.ts",
     "type-check": "tsc --noEmit",

@@ -1,6 +1,6 @@
-import { Console } from "console";
-import { Options } from "./options";
-import { Chalk } from "chalk";
+import { Console } from "node:console";
+import type { ChalkInstance } from "chalk";
+import type { Options } from "./options.ts";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type InternalLoggerFunc = (whereToLog: any, message: string) => void;
@@ -14,11 +14,11 @@ export interface Logger {
   logError: LoggerFunc;
 }
 
-enum LogLevel {
-  INFO = 1,
-  WARN = 2,
-  ERROR = 3,
-}
+const LogLevel = {
+  INFO: 1,
+  WARN: 2,
+  ERROR: 3,
+} as const;
 
 const stderrConsole = new Console(process.stderr);
 const stdoutConsole = new Console(process.stdout);
@@ -46,7 +46,7 @@ const makeExternalLogger = (
 const makeLogInfo = (
   options: Options,
   logger: InternalLoggerFunc,
-  green: Chalk
+  green: ChalkInstance
 ): LoggerFunc =>
   LogLevel[options.logLevel] <= LogLevel.INFO
     ? (message: string) =>
@@ -59,7 +59,7 @@ const makeLogInfo = (
 const makeLogError = (
   options: Options,
   logger: InternalLoggerFunc,
-  red: Chalk
+  red: ChalkInstance
 ): LoggerFunc =>
   LogLevel[options.logLevel] <= LogLevel.ERROR
     ? (message: string) => logger(stderrConsole, red(message))
@@ -68,13 +68,13 @@ const makeLogError = (
 const makeLogWarning = (
   options: Options,
   logger: InternalLoggerFunc,
-  yellow: Chalk
+  yellow: ChalkInstance
 ): LoggerFunc =>
   LogLevel[options.logLevel] <= LogLevel.WARN
     ? (message: string) => logger(stderrConsole, yellow(message))
     : doNothingLogger;
 
-export function makeLogger(options: Options, colors: Chalk): Logger {
+export function makeLogger(options: Options, colors: ChalkInstance): Logger {
   const logger = makeLoggerFunc(options);
   return {
     log: makeExternalLogger(options, logger),

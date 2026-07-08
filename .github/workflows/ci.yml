@@ -9,54 +9,50 @@ on:
 jobs:
   lint:
     name: Linting Checks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     steps:
       - name: Checkout
-        uses: actions/checkout@v1
-
-      - name: Setup NodeJs
-        uses: actions/setup-node@v2
-        with:
-          node-version: "lts/*"
+        uses: actions/checkout@v7
 
       - name: Install Dependencies
-        run: yarn install --frozen-lockfile
+        run: npm ci
 
       - name: Run Linting Checks
-        run: yarn lint
+        run: node --run lint
+
+      - name: Run Type Checking
+        run: node --run type-check
 
   test:
-    name: "Test - Node: ${{ matrix.node_version }} - OS: ${{ matrix.os }}"
-    runs-on: ubuntu-latest
+    name: "Test - Node: ${{ matrix.node_version }}"
+    runs-on: ubuntu-slim
 
     strategy:
       fail-fast: true
       matrix:
-        os:
-          - "ubuntu-latest"
         node_version:
-          - "16"
-          - "18"
-          - "20"
+          - "24"
+          - "26"
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v7
 
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Use Node.js
         uses: actions/setup-node@v1
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: ${{ matrix.node_version }}
 
-      - name: yarn install
-        run: yarn install --frozen-lockfile
+      - name: Install dependencies
+        run: npm ci
 
       - name: build
         run: yarn build
 
       - name: test
-        run: yarn test-coverage
+        run: node --run test-coverage
 
       - name: Report coverage
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v7
         with:
-          file: coverage/lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage/lcov.info

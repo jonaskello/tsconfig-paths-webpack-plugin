@@ -1,1 +1,1 @@
-yarn lint-staged
+node --run lint-staged
